@@ -53,9 +53,20 @@ export function useMic(): UseMicResult {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setStatus("recording");
-      mediaRecorderRef.current = new MediaRecorder(stream, {
-          mimeType: 'audio/webm', // Explicitly set WebM as required
-      });
+      // Determine supported mimeType for MediaRecorder
+      let mimeType = '';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/mpeg')) {
+          mimeType = 'audio/mpeg';
+        } else {
+          mimeType = '';
+        }
+      }
+      mediaRecorderRef.current = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
