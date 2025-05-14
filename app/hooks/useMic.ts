@@ -54,11 +54,24 @@ export function useMic(): UseMicResult {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       setStatus("recording");
-      // Determine supported mimeType for MediaRecorder
+      // Prefer audio/webm;codecs=opus for iOS 18.4+ and modern browsers
       let mimeType = '';
       const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/.test(navigator.userAgent);
+      const iOSVersionMatch = typeof navigator !== 'undefined' && navigator.userAgent.match(/OS (\d+)_?(\d+)?/);
+      let iOSMajor = 0, iOSMinor = 0;
+      if (isIOS && iOSVersionMatch) {
+        iOSMajor = parseInt(iOSVersionMatch[1], 10);
+        iOSMinor = iOSVersionMatch[2] ? parseInt(iOSVersionMatch[2], 10) : 0;
+      }
+      // iOS 18.4+ supports audio/webm;codecs=opus
       if (typeof MediaRecorder !== 'undefined') {
-        if (isIOS && MediaRecorder.isTypeSupported('audio/mp4')) {
+        if (
+          MediaRecorder.isTypeSupported('audio/webm;codecs=opus') &&
+          (!isIOS || (iOSMajor > 18 || (iOSMajor === 18 && iOSMinor >= 4)))
+        ) {
+          mimeType = 'audio/webm;codecs=opus';
+        } else if (isIOS && iOSMajor >= 14 && MediaRecorder.isTypeSupported('audio/mp4')) {
+          // Fallback for iOS 14+ but <18.4
           mimeType = 'audio/mp4';
         } else if (MediaRecorder.isTypeSupported('audio/webm')) {
           mimeType = 'audio/webm';
@@ -71,9 +84,8 @@ export function useMic(): UseMicResult {
         }
       }
       if (!mimeType && typeof MediaRecorder !== 'undefined') {
-        setError(new Error('Sorry, your browser does not support audio recording for this app.'));
+        setError(new Error('Sorry, your browser does not support audio recording for this app. If you are on iOS, please update to iOS 18.4 or later, or use a desktop/Android browser.'));
         setStatus('error');
-        // Clean up the stream tracks if they exist
         if (stream) stream.getTracks().forEach(track => track.stop());
         return;
       }
