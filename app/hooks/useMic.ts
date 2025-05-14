@@ -56,8 +56,11 @@ export function useMic(): UseMicResult {
       setStatus("recording");
       // Determine supported mimeType for MediaRecorder
       let mimeType = '';
+      const isIOS = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/.test(navigator.userAgent);
       if (typeof MediaRecorder !== 'undefined') {
-        if (MediaRecorder.isTypeSupported('audio/webm')) {
+        if (isIOS && MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
           mimeType = 'audio/webm';
         } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
           mimeType = 'audio/mp4';
@@ -66,6 +69,13 @@ export function useMic(): UseMicResult {
         } else {
           mimeType = '';
         }
+      }
+      if (!mimeType && typeof MediaRecorder !== 'undefined') {
+        setError(new Error('Sorry, your browser does not support audio recording for this app.'));
+        setStatus('error');
+        // Clean up the stream tracks if they exist
+        if (stream) stream.getTracks().forEach(track => track.stop());
+        return;
       }
       selectedMimeTypeRef.current = mimeType;
       mediaRecorderRef.current = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
