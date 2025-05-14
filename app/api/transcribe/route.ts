@@ -18,16 +18,18 @@ export async function POST(req: NextRequest) {
     const audioBuffer = await audioBlob.arrayBuffer();
     // Dynamically determine the file extension from the mime type
     let extension = 'webm';
-    if (audioBlob.type) {
-      if (audioBlob.type.includes('mp4')) extension = 'mp4';
-      else if (audioBlob.type.includes('mpeg')) extension = 'mpeg';
-      else if (audioBlob.type.includes('mpga')) extension = 'mpga';
-      else if (audioBlob.type.includes('wav')) extension = 'wav';
-      else if (audioBlob.type.includes('m4a')) extension = 'm4a';
-      else if (audioBlob.type.includes('webm')) extension = 'webm';
+    let baseType = audioBlob.type.split(';')[0]; // Remove codecs info
+    console.log('audioBlob.type:', audioBlob.type, 'baseType:', baseType);
+    if (baseType) {
+      if (baseType.includes('mp4')) extension = 'mp4';
+      else if (baseType.includes('mpeg')) extension = 'mpeg';
+      else if (baseType.includes('mpga')) extension = 'mpga';
+      else if (baseType.includes('wav')) extension = 'wav';
+      else if (baseType.includes('m4a')) extension = 'm4a';
+      else if (baseType.includes('webm')) extension = 'webm';
     }
     const file = await toFile(Buffer.from(audioBuffer), `audio.${extension}`, {
-        type: audioBlob.type,
+        type: baseType,
     });
 
     const transcription = await openai.audio.transcriptions.create({
