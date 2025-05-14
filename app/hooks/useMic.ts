@@ -20,6 +20,7 @@ export function useMic(): UseMicResult {
   const [error, setError] = useState<Error | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const selectedMimeTypeRef = useRef<string>('');
 
   // Feature detection
   const isAudioApiSupported = typeof window !== 'undefined' &&
@@ -66,6 +67,7 @@ export function useMic(): UseMicResult {
           mimeType = '';
         }
       }
+      selectedMimeTypeRef.current = mimeType;
       mediaRecorderRef.current = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       audioChunksRef.current = [];
 
@@ -76,7 +78,7 @@ export function useMic(): UseMicResult {
       };
 
       mediaRecorderRef.current.onstop = () => {
-        const completeBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        const completeBlob = new Blob(audioChunksRef.current, selectedMimeTypeRef.current ? { type: selectedMimeTypeRef.current } : undefined);
         setAudioBlob(completeBlob);
         setAudioUrl(URL.createObjectURL(completeBlob));
         setStatus("stopped");
