@@ -16,7 +16,17 @@ export async function POST(req: NextRequest) {
     // Convert the Blob to a File-like object suitable for the API using toFile
     // We need the ArrayBuffer for this.
     const audioBuffer = await audioBlob.arrayBuffer();
-    const file = await toFile(Buffer.from(audioBuffer), "audio.webm", {
+    // Dynamically determine the file extension from the mime type
+    let extension = 'webm';
+    if (audioBlob.type) {
+      if (audioBlob.type.includes('mp4')) extension = 'mp4';
+      else if (audioBlob.type.includes('mpeg')) extension = 'mpeg';
+      else if (audioBlob.type.includes('mpga')) extension = 'mpga';
+      else if (audioBlob.type.includes('wav')) extension = 'wav';
+      else if (audioBlob.type.includes('m4a')) extension = 'm4a';
+      else if (audioBlob.type.includes('webm')) extension = 'webm';
+    }
+    const file = await toFile(Buffer.from(audioBuffer), `audio.${extension}`, {
         type: audioBlob.type,
     });
 
