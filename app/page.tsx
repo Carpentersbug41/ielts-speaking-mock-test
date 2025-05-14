@@ -338,7 +338,7 @@ export default function Page() {
   if (!isMounted) {
     return (
        <div className="grow flex flex-col p-4 space-y-4 max-w-3xl mx-auto items-center justify-center">
-         <h1 className="text-2xl font-bold">IELTS Speaking Mock Test v4</h1>
+         <h1 className="text-2xl font-bold">IELTS Speaking Mock Test v5</h1>
          <p>Loading...</p>
        </div>
     );
@@ -360,7 +360,7 @@ export default function Page() {
         {lastError && <p className="text-red-500">App Error: {lastError}</p>}
       </div>
       <div className="grow flex flex-col p-4 space-y-4 max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold">IELTS Speaking Mock Test v4</h1>
+        <h1 className="text-2xl font-bold">IELTS Speaking Mock Test v5</h1>
         {currentTopic && <h2 className="text-lg font-semibold">Topic: {currentTopic}</h2>}
 
         {/* Button to toggle chat history */}
