@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
       try {
         const completion = await openai.chat.completions.create({
-          model: 'gpt-4o-mini', // Use the cost-effective mini model for evaluation
+          model: rubric.model || 'gpt-4o-mini', // Use the model from the prompt, fallback to default
           messages: [
             { role: "system", content: filledPrompt }, // Send the combined prompt as system message
           ],

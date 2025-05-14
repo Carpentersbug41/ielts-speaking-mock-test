@@ -1,4 +1,10 @@
-export const RUBRIC_PROMPTS = [
+export type PromptType = {
+  criterion: string;
+  prompt_template: string;
+  model?: string;
+};
+
+export const RUBRIC_PROMPTS: PromptType[] = [
   {
     criterion: "Fluency and Coherence",
     prompt_template: `# System
@@ -8,22 +14,24 @@ You are an expert IELTS examiner evaluating a candidate's Speaking Part 1 perfor
 {{TRANSCRIPT}}
 
 ## Task
-Evaluate the candidate's Fluency and Coherence based *only* on the transcript. Consider their ability to speak at length, connect ideas logically, use cohesive devices appropriately, and the frequency of hesitation or self-correction (as inferable from the text).
+Evaluate the candidate's Fluency and Coherence based *only* on the transcript. Consider their ability to speak at length, connect ideas logically, use cohesive devices appropriately, stay on topic, and the frequency of hesitation or self-correction (as inferable from the text). Staying on topic is integral to coherence: if the candidate goes off-topic, their answer may lack logical progression and become difficult to follow, which should affect the coherence score.
 
 Output your evaluation in the following format **exactly**:
 Band Score: [Score from 1-9]
 Feedback: [One paragraph (2-4 sentences) explaining the score based *only* on Fluency and Coherence criteria observable in the transcript.]
 
 ## Rules
-- Focus ONLY on Fluency and Coherence (logical flow, linking, ability to speak at length, and cohesion).
-- Do NOT mention or penalize for vocabulary, grammar, structure, idea coverage, or pronunciation—these are for other criteria.
+- Focus ONLY on Fluency and Coherence (logical flow, linking, ability to speak at length, cohesion, and staying on topic).
+- Do NOT mention or penalize for vocabulary, grammar, structure, idea accuracy, or pronunciation—these are for other criteria.
+- Only consider the candidate's ability to stay on topic as it relates to coherence and logical flow.
 - Base the score and feedback *strictly* on the provided transcript text.
 - Output only the Band Score line and the Feedback line. No extra text.
 
 ## Example Rationales
-Band 9: "The candidate speaks at length with no noticeable hesitation, ideas are logically connected, and a wide range of cohesive devices are used naturally."
-Band 7: "The candidate is able to speak at length with occasional hesitation, and ideas are generally logically connected, though some linking words are used repetitively."
-`
+Band 9: "The candidate speaks at length with no noticeable hesitation, ideas are logically connected, remains fully on topic, and a wide range of cohesive devices are used naturally."
+Band 7: "The candidate is able to speak at length with occasional hesitation, ideas are generally logically connected and mostly on topic, though some linking words are used repetitively."
+`,
+    model: "gpt-4.1-mini-2025-04-14",
   },
   {
     criterion: "Lexical Resource",
@@ -34,22 +42,24 @@ You are an expert IELTS examiner evaluating a candidate's Speaking Part 1 perfor
 {{TRANSCRIPT}}
 
 ## Task
-Evaluate the candidate's Lexical Resource based *only* on the transcript. Consider the range, precision, naturalness, and appropriateness of vocabulary, as well as repetition and use of less common or idiomatic expressions.
+Evaluate the candidate's Lexical Resource based *only* on the transcript. Consider the range, precision, naturalness, and appropriateness of vocabulary, as well as repetition and use of less common or idiomatic expressions. Only vocabulary that is relevant and on topic should be considered; off-topic language does not demonstrate the candidate's ability to use vocabulary in context and should not contribute to a higher score.
 
 Output your evaluation in the following format **exactly**:
 Band Score: [Score from 1-9]
 Feedback: [One paragraph (2-4 sentences) explaining the score based *only* on Lexical Resource criteria observable in the transcript.]
 
 ## Rules
-- Focus ONLY on Lexical Resource (vocabulary: range, precision, naturalness, appropriateness, repetition).
-- Do NOT mention or penalize for fluency, grammar, structure, idea coverage, or pronunciation—these are for other criteria.
+- Focus ONLY on Lexical Resource (vocabulary: range, precision, naturalness, appropriateness, repetition, and on-topic use).
+- Do NOT mention or penalize for fluency, grammar, structure, idea accuracy, or pronunciation—these are for other criteria.
+- Only consider vocabulary that is used in a way that is relevant and on topic for the question.
 - Base the score and feedback *strictly* on the provided transcript text.
 - Output only the Band Score line and the Feedback line. No extra text.
 
 ## Example Rationales
-Band 9: "The candidate uses a wide range of precise and natural vocabulary, including some less common and idiomatic expressions, with no noticeable repetition."
-Band 7: "The candidate demonstrates a good range of vocabulary with some flexibility and precision, though there is occasional repetition or less natural word choice."
-`
+Band 9: "The candidate uses a wide range of precise and natural vocabulary, including some less common and idiomatic expressions, all of which are relevant and on topic, with no noticeable repetition."
+Band 7: "The candidate demonstrates a good range of vocabulary with some flexibility and precision, mostly on topic, though there is occasional repetition or less natural word choice."
+`,
+    model: "gpt-4.1-mini-2025-04-14",
   },
   {
     criterion: "Grammatical Range and Accuracy",
@@ -60,25 +70,25 @@ You are an expert IELTS examiner evaluating a candidate's Speaking Part 1 perfor
 {{TRANSCRIPT}}
 
 ## Task
-Evaluate the candidate's Grammatical Range and Accuracy based *only* on the transcript. Consider the range of sentence structures used (simple and complex), the flexibility in using them, and the accuracy (control) of grammar and punctuation (as observed in the transcript). Assess the impact of any grammatical errors on communication.
+Evaluate the candidate's Grammatical Range and Accuracy based *only* on the transcript. Consider the range of sentence structures used (simple and complex), the flexibility in using them, and the accuracy (control) of grammar and punctuation (as observed in the transcript). Only on-topic, relevant sentences should be considered; off-topic language does not demonstrate the candidate's grammatical ability in context and should not contribute to a higher score.
 
 Output your evaluation in the following format **exactly**:
 Band Score: [Score from 1-9]
 Feedback: [One paragraph (2-4 sentences) explaining the score based *only* on Grammatical Range and Accuracy criteria observable in the transcript.]
 
 ## Rules
-- Focus ONLY on Grammatical Range and Accuracy (sentence structure variety, grammar, punctuation, and error impact on communication).
-- Do NOT mention or penalize for fluency, vocabulary, structure, idea coverage, or pronunciation—these are for other criteria.
+- Focus ONLY on Grammatical Range and Accuracy (sentence structure variety, grammar, punctuation, error impact on communication, and on-topic use).
+- Do NOT mention or penalize for fluency, vocabulary, structure, idea accuracy, or pronunciation—these are for other criteria.
+- Only consider grammar and sentence structures that are relevant and on topic for the question.
 - Base the score and feedback *strictly* on the provided transcript text.
 - Output only the Band Score line and the Feedback line. No extra text.
 
 ## Example Rationales
-Band 9: "The candidate uses a wide range of complex and simple structures with full flexibility and accuracy; errors are rare and hard to spot."
-Band 7: "The candidate uses a mix of simple and complex structures with generally good control, though some errors are present but rarely cause misunderstanding."
-`
+Band 9: "The candidate uses a wide range of complex and simple structures with full flexibility and accuracy, all of which are relevant and on topic; errors are rare and hard to spot."
+Band 7: "The candidate uses a mix of simple and complex structures with generally good control, mostly on topic, though some errors are present but rarely cause misunderstanding."
+`,
+    model: "gpt-4.1-mini-2025-04-14",
   },
-
-
   {
     criterion: "AEEC Introduction",
     prompt_template: `# System message:
@@ -97,15 +107,12 @@ We'll show you how to apply AEEC to your answer, so you can see exactly how to s
 ## Completion Instructions:
 - Only output the text exactly as shown.
 - Do NOT modify, shorten, or summarize.
-- Do NOT add any other content or questions.`
-  }
-,
-
-
-
-{
-  criterion: "AEEC Structure Advice",
-  prompt_template: `# System
+- Do NOT add any other content or questions.`,
+    model: "gpt-4.1-mini-2025-04-14",
+  },
+  {
+    criterion: "AEEC Structure Advice",
+    prompt_template: `# System
 You are an expert IELTS Speaking coach. Your task is to review the candidate's Speaking Part 1 transcript and provide specific, actionable advice on how to improve their answers using the AEEC (Answer, Extend, Example, Conclude) structure.\n\n\
 
 ## Transcript\n{{TRANSCRIPT}}\n\n\
@@ -165,9 +172,9 @@ Improved (AEEC):\n\n\
   - **E (Example):** Last year I went to a small jazz concert at a local club, and I've been going to jazz concerts for about 10 years now.\n\n\
   - **C (Conclude):** That's why jazz is such an important part of my life.\n\n\
 Reason: The improved answer uses AEEC to provide a fuller, more engaging response.\n\n\
-`
-}
-
+`,
+    model: "gpt-4.1-mini-2025-04-14",
+  },
 ];
 
 export type RubricResult = {

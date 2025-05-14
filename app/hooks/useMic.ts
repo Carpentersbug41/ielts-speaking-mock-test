@@ -94,12 +94,16 @@ export function useMic(): UseMicResult {
       audioChunksRef.current = [];
 
       mediaRecorderRef.current.ondataavailable = (event) => {
-        if (event.data.size > 0) {
+        if (event.data.size > 100) { // Ignore empty or very small chunks
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorderRef.current.onstop = () => {
+        // Remove any leading empty or very short chunks
+        while (audioChunksRef.current.length && audioChunksRef.current[0].size < 100) {
+          audioChunksRef.current.shift();
+        }
         const completeBlob = new Blob(audioChunksRef.current, selectedMimeTypeRef.current ? { type: selectedMimeTypeRef.current } : undefined);
         setAudioBlob(completeBlob);
         setAudioUrl(URL.createObjectURL(completeBlob));
@@ -118,6 +122,8 @@ export function useMic(): UseMicResult {
         stream.getTracks().forEach(track => track.stop());
       };
 
+      // Wait a microtask before starting the recording (iOS 18.4+ workaround)
+      await Promise.resolve();
       mediaRecorderRef.current.start();
 
     } catch (err) {
