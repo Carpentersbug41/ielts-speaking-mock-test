@@ -361,6 +361,15 @@ export default function Page() {
       </div>
       <div className="grow flex flex-col p-4 space-y-4 max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold">IELTS Speaking Mock Test v6</h1>
+        {appState === 'processing_feedback' ? (
+          <div className="flex flex-col items-center justify-center h-64">
+            <div className="mb-4">
+              <span className="inline-block w-10 h-10 border-4 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+            </div>
+            <p className="text-center text-gray-500 text-lg">I'm marking your score and generating feedback, this may take a minute.</p>
+          </div>
+        ) : (
+        <>
         {currentTopic && <h2 className="text-lg font-semibold">Topic: {currentTopic}</h2>}
 
         {/* Button to toggle chat history */}
@@ -382,7 +391,6 @@ export default function Page() {
             {appState === 'transcribing' && <p className="text-center text-gray-500">Transcribing...</p>}
             {appState === 'asking' && <p className="text-center text-gray-500">Examiner is thinking...</p>}
             {appState === 'speaking' && <p className="text-center text-gray-500">Examiner is preparing to speak...</p>}
-            {appState === 'processing_feedback' && <p className="text-center text-gray-500">Processing feedback...</p>}
           </div>
         )}
 
@@ -416,14 +424,8 @@ export default function Page() {
             <h2 className="text-xl font-semibold mb-2">Feedback Results</h2>
             {feedbackResults.map((res, index) => (
               <div key={index} className="mb-3">
-                {res.criterion === 'AEEC Introduction' ? (
-                  <div dangerouslySetInnerHTML={{ __html: markdownToHtml(res.feedback) }} />
-                ) : (
-                  <>
-                    <h3 className="font-bold">{res.criterion} - Band Score: {res.band_score > 0 ? res.band_score : 'N/A'}</h3>
-                    <div dangerouslySetInnerHTML={{ __html: markdownToHtml(res.feedback) }} />
-                  </>
-                )}
+                <h3 className="font-bold mb-1">{res.criterion}</h3>
+                <div dangerouslySetInnerHTML={{ __html: markdownToHtml(res.feedback) }} />
               </div>
             ))}
             <button 
@@ -433,6 +435,8 @@ export default function Page() {
               Start New Interview
             </button>
           </div>
+        )}
+        </>
         )}
       </div>
     </>
