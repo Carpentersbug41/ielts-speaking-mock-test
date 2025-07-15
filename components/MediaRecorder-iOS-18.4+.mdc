@@ -3,3 +3,83 @@ description:
 globs:
 alwaysApply: false
 ---
+# MediaRecorder on iOS 18.4+: Full Audio Support Arrives
+
+**TL;DR – Yes, there finally is a real fix.**
+
+From iOS 18.4 / Safari 18.4 (shipped March 2025) onward, the shipping MediaRecorder implementation on iPhone and iPad is no longer "video-only". It can now:
+
+- Record audio-only streams without crashing
+- Emit WebM/Opus as well as fragmented MP4 (fMP4) and lossless ALAC / PCM
+- Do so with bitrate, timeslice and pause/resume handling that match the spec
+
+## 1. What changed – a quick chronology
+
+| Safari / iOS | Status of audio recording | Notes |
+|--------------|--------------------------|-------|
+| 14 → 17 (2020-23) | Unreliable: only fMP4; crashes on long recordings; ondataavailable timing bugs | Many devs disabled MediaRecorder and shipped WASM encoders instead. |
+| 18.0 (Sept 2024) | Still flaky, but first signs of work (Tech-Preview fixes for timeslice / pause bug). | Apple Developer |
+| 18.2 (Dec 2024) | Bug-fix release; reliability improves but still no WebM. | |
+| **18.4 (Mar 2025)** | **Full spec support for audio-only streams, WebM/Opus, ALAC/PCM, fMP4; much better memory behaviour.** | WebKit, Gadget Hacks |
+| 18.5 (May 2025 beta) | Maintains support; listed as "Supported" on caniuse. | Can I Use |
+
+## 2. Do you still need a polyfill or WASM encoder?
+
+### If you can require iOS 18.4+
+Use the platform API:
+
+```js
+const stream = await navigator.mediaDevices.getUserMedia({audio:true});
+const rec   = new MediaRecorder(stream, {mimeType:'audio/webm;codecs=opus'});
+rec.ondataavailable = e => chunks.push(e.data);
+```
+
+Feature-detect like this (now returns true on 18.4+):
+
+```js
+MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+```
+
+### If you must support older devices (< 18.4)
+- Runtime feature-detect as above.
+- If unsupported, fall back to "manual" recording:
+  - Capture raw PCM via an AudioWorklet or MediaStreamTrackProcessor (both work on iOS 18+)
+  - Feed the PCM to a WASM encoder (e.g. opus-recorder, wasm-audio-recorder, or a slimmed-down ffmpeg.wasm) in a Worker so you don't block the UI.
+  - Ship only Opus or WAV; iOS Safari can play both even when it can't record them.
+
+**Tip:** Since WebAssembly JIT can be disabled on some iPhones (privacy setting), keep your WASM module small (<1 MB) and parallelise only when `navigator.hardwareConcurrency > 2`.
+
+## 3. Edge cases & gotchas on 18.4+
+
+| Quirk | Work-around |
+|-------|-------------|
+| First ondataavailable may fire with an empty blob if you call start(…) immediately after getUserMedia. | Wait one micro-task (e.g. `await Promise.resolve()`) before start(). |
+| Sample-rate is always 48 kHz on device microphones. | Resample in your encoder or server-side if you need 44.1 kHz. |
+| Safari still prefixes some codec strings (alac, pcm) in mimeType. | Just check blob.type — Safari fills it correctly. |
+| Background tab throttling can delay onpause/onresume events. | Keep the recording page in a PWA window or request the Wake-Lock API (`navigator.wakeLock.request('screen')`, also new in 18.4). |
+
+## 4. Hybrid / advanced approaches
+- **WebCodecs + MediaStreamTrackProcessor** – lets you run your own AudioEncoder for exotic formats (e.g. AAC-LC). Supported in Safari 18 and later.  
+  [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder)
+- **Service-Worker caching** – if you record long sessions, stream each Blob chunk to your Service Worker and pipe it to IndexedDB. Avoids large in-memory arrays.
+- **Native-bridge escape hatch** – inside an App-Store hosted WKWebView you can still expose webkit.messageHandlers and hand the stream to Swift/AVFoundation for absolute control.
+
+## 5. Best-practice checklist (2025 edition)
+- Feature-detect MediaRecorder and the exact mime type you intend to use.
+- Prefer `audio/webm;codecs=opus` – smallest, widely playable, now works on iOS 18.4+.
+- Provide a WASM/Worklet fallback for iOS 14-18.3 or niche desktop Safari builds.
+- Upload progressively: send each dataavailable chunk to the server; let the back-end stitch or transcode.
+- Handle permissions gracefully; iOS will revoke mic access on app switch if you don't call `stream.getTracks().forEach(t=>t.stop())`.
+
+## 6. Further reading / references
+- [WebKit Blog — "WebKit Features in Safari 18.4" (Media section)](https://webkit.org/blog/)
+- [GadgetHacks deep-dive on Safari 18.4 hidden web features (WebM recording)](https://gadgethacks.com/)
+- [Safari TP Release Notes #182 – pausing/timeslice bug fix for MediaRecorder](https://developer.apple.com/safari/technology-preview/release-notes/)
+- [MDN: AudioEncoder (WebCodecs) – browser support table shows Safari 18+](https://developer.mozilla.org/en-US/docs/Web/API/AudioEncoder)
+- [Can-I-Use: MediaRecorder API – lists 18.4+ and iOS 18.4+ as fully supported](https://caniuse.com/?search=mediarecorder)
+- [MDN: MediaStreamTrackProcessor – now flagged "Experimental but supported" in Safari 18+](https://developer.mozilla.org/en-US/docs/Web/API/MediaStreamTrackProcessor)
+
+---
+
+**Bottom line:**
+If your users are on iOS 18.4 or later, you can at last treat Safari like every other evergreen browser and record audio with MediaRecorder. Keep a WASM fallback for the long tail, and you're covered.

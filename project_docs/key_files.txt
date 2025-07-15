@@ -1,0 +1,72 @@
+# Key Project Files and Their Importance
+
+This document provides an overview of the most important files in the Therapy Chatbot application and explains their roles.
+
+---
+
+### 1. `ielts-speaking-mock-test/app/page.tsx`
+
+*   **Importance:** **Core Frontend Application & State Orchestrator**
+*   **Description:** This is the main React component that the user interacts with. It serves as the central orchestrator, managing the application's state machine (e.g., `idle`, `recording`, `summarizing`, `asking`). It crucially maintains two separate histories: `fullChatHistory` for the complete, visible transcript, and `llmContextMessages`, a summarized version sent to the AI to maintain context. It triggers all API calls and controls the entire user experience.
+
+---
+
+### 2. `ielts-speaking-mock-test/lib/singlePrompt.ts`
+
+*   **Importance:** **Core AI Therapist Personality**
+*   **Description:** This file defines the single, high-level system prompt for the AI therapist. It sets the persona, rules, and overall goal for the AI, guiding it to conduct a therapeutic conversation rather than a simple Q&A.
+
+---
+
+### 3. `ielts-speaking-mock-test/lib/rubricPrompts.ts`
+
+*   **Importance:** **Post-Session Analysis & Note Generation**
+*   **Description:** This file contains prompts used for processing the session transcript *after* the conversation is complete. The primary example is a prompt to generate a clinical "DAP Note" (Data, Assessment, Plan), transforming the conversational data into a structured, professional summary for a therapist's review.
+
+---
+
+### 4. `ielts-speaking-mock-test/app/api/ask/route.ts`
+
+*   **Importance:** **Dynamic AI Question Generation**
+*   **Description:** This is the backend API endpoint responsible for generating the therapist's next question. It receives the `llmContextMessages` (the summarized history) from the frontend, sends them to the OpenAI API, and returns a dynamically generated question that is contextually aware of the conversation's summary.
+
+---
+
+### 5. `ielts-speaking-mock-test/app/api/summarize/route.ts`
+
+*   **Importance:** **Long-Term Conversational Memory**
+*   **Description:** This is a new, critical endpoint for the memory system. It receives a portion of the chat history from the client, sends it to the LLM with a specialized prompt, and generates a concise summary. This summary is then integrated back into the `llmContextMessages` on the client, allowing the AI to "remember" the key points of the conversation without exceeding context limits.
+
+---
+
+### 6. `ielts-speaking-mock-test/app/api/transcribe/route.ts`
+
+*   **Importance:** **Speech-to-Text Conversion**
+*   **Description:** This endpoint handles the crucial task of converting the user's spoken audio into text. It receives an audio blob from the frontend, sends it to OpenAI's `whisper-1` model, and returns the transcript. This is essential for capturing the user's side of the conversation.
+
+---
+
+### 7. `ielts-speaking-mock-test/app/api/speak/route.ts`
+
+*   **Importance:** **Text-to-Speech Conversion**
+*   **Description:** This endpoint gives the AI therapist a voice. It receives text (the therapist's question) from the frontend, sends it to a text-to-speech (TTS) service, and streams back the resulting audio, creating a more realistic and interactive session.
+
+---
+
+### 8. `ielts-speaking-mock-test/app/api/pipeline/route.ts`
+
+*   **Importance:** **Final Analysis Orchestration**
+*   **Description:** This API is called at the end of the session. It takes the full user transcript and runs it against all the processing prompts defined in `rubricPrompts.ts` (e.g., DAP Note generation). It orchestrates the entire final analysis process and sends the compiled results back to the frontend.
+
+---
+
+### 9. `ielts-speaking-mock-test/app/hooks/useMic.ts`
+
+*   **Importance:** **Microphone Interaction Logic**
+*   **Description:** This is a custom React hook that encapsulates all the logic for accessing the user's microphone, starting and stopping recording, and managing the audio data (as a Blob). It provides a clean and reusable interface for the main `page.tsx` component to handle audio capture.
+---
+
+### 10. `ielts-speaking-mock-test/lib/interviewPrompts.ts`
+
+*   **Importance:** **(DEPRECATED) Old Interview Structure**
+*   **Description:** This file previously defined the rigid, turn-by-turn questions for the mock interview. It has been replaced by `lib/singlePrompt.ts` and a dynamic, history-aware `ask` API. It is kept in the project for reference but is no longer used by the application.

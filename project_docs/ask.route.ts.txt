@@ -96,4 +96,4 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'An unknown error occurred in Ask API' }, { status: 500 });
     }
   }
-}
+} 
